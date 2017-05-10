@@ -56,15 +56,33 @@
 <h1><strong>PyAV</strong> Documentation<a class="headerlink" href="#pyav-documentation" title="Permalink to this headline">¶</a></h1>
 <p><strong>PyAV</strong> is a Pythonic binding for <a class="reference external" href="http://ffmpeg.org">FFmpeg</a> or <a class="reference external" href="http://libav.org">Libav</a>. We aim to provide all of the power and control of the underlying library, but manage the gritty details as much as possible.</p>
 <p>Currently we provide the basics of:</p>
-<ul class="simple">
+<ul>
+<li><dl class="first docutils">
+<dt>libavformat:</dt>
+<dd><ul class="first last simple">
 <li><a class="reference internal" href="api.html#av.container.Container" title="av.container.Container"><code class="xref py py-class docutils literal"><span class="pre">containers</span></code></a></li>
-<li>devices (by specifying a format)</li>
 <li>audio/video/subtitle <a class="reference internal" href="api.html#av.stream.Stream" title="av.stream.Stream"><code class="xref py py-class docutils literal"><span class="pre">streams</span></code></a></li>
 <li><a class="reference internal" href="api.html#av.packet.Packet" title="av.packet.Packet"><code class="xref py py-class docutils literal"><span class="pre">packets</span></code></a></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">libavdevice (by specifying a format to containers)</p>
+</li>
+<li><dl class="first docutils">
+<dt>libavcodec:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="api.html#av.codec.codec.Codec" title="av.codec.codec.Codec"><code class="xref py py-class docutils literal"><span class="pre">Codec</span></code></a></li>
+<li><a class="reference internal" href="api.html#av.codec.context.CodecContext" title="av.codec.context.CodecContext"><code class="xref py py-class docutils literal"><span class="pre">CodecContext</span></code></a></li>
 <li>audio/video <a class="reference internal" href="api.html#av.frame.Frame" title="av.frame.Frame"><code class="xref py py-class docutils literal"><span class="pre">frames</span></code></a></li>
 <li><a class="reference internal" href="api.html#av.plane.Plane" title="av.plane.Plane"><code class="xref py py-class docutils literal"><span class="pre">data</span> <span class="pre">planes</span></code></a></li>
 <li><a class="reference internal" href="api.html#av.subtitles.subtitle.Subtitle" title="av.subtitles.subtitle.Subtitle"><code class="xref py py-class docutils literal"><span class="pre">subtitles</span></code></a></li>
-<li>and a few more utilities.</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">and a few more utilities.</p>
+</li>
 </ul>
 <div class="section" id="basic-demo">
 <h2>Basic Demo<a class="headerlink" href="#basic-demo" title="Permalink to this headline">¶</a></h2>

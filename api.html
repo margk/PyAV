@@ -84,7 +84,7 @@
 </tr>
 </tbody>
 </table>
-<p>For devices (via <cite>libavdevice</cite>), pass the name of the device to <code class="docutils literal"><span class="pre">format</span></code>,
+<p>For devices (via <code class="docutils literal"><span class="pre">libavdevice</span></code>), pass the name of the device to <code class="docutils literal"><span class="pre">format</span></code>,
 e.g.:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Open webcam on OS X.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">av</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;avfoundation&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="s1">&#39;0&#39;</span><span class="p">)</span> 
@@ -477,6 +477,309 @@ to None which will grab either.</li>
 </dd></dl>
 
 </div>
+<div class="section" id="module-av.codec.codec">
+<span id="codecs"></span><h3>Codecs<a class="headerlink" href="#module-av.codec.codec" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="av.codec.codec.Codec">
+<em class="property">class </em><code class="descclassname">av.codec.codec.</code><code class="descname">Codec</code><a class="headerlink" href="#av.codec.codec.Codec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>A single encoding or decoding codec.</p>
+<p>This object exposes information about an availible codec, and an avenue to
+create a <a class="reference internal" href="#av.codec.context.CodecContext" title="av.codec.context.CodecContext"><code class="xref py py-class docutils literal"><span class="pre">CodecContext</span></code></a> to encode/decode directly.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">codec</span> <span class="o">=</span> <span class="n">Codec</span><span class="p">(</span><span class="s1">&#39;mpeg4&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">codec</span><span class="o">.</span><span class="n">name</span>
+<span class="go">mpeg4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">codec</span><span class="o">.</span><span class="n">type</span>
+<span class="go">video</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">codec</span><span class="o">.</span><span class="n">is_encoder</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.audio_formats">
+<code class="descname">audio_formats</code><a class="headerlink" href="#av.codec.codec.Codec.audio_formats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.audio_rates">
+<code class="descname">audio_rates</code><a class="headerlink" href="#av.codec.codec.Codec.audio_rates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.auto_threads">
+<code class="descname">auto_threads</code><a class="headerlink" href="#av.codec.codec.Codec.auto_threads" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.bitmap_sub">
+<code class="descname">bitmap_sub</code><a class="headerlink" href="#av.codec.codec.Codec.bitmap_sub" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.channel_conf">
+<code class="descname">channel_conf</code><a class="headerlink" href="#av.codec.codec.Codec.channel_conf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="av.codec.codec.Codec.create">
+<code class="descname">create</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#av.codec.codec.Codec.create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.delay">
+<code class="descname">delay</code><a class="headerlink" href="#av.codec.codec.Codec.delay" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.descriptor">
+<code class="descname">descriptor</code><a class="headerlink" href="#av.codec.codec.Codec.descriptor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.dr1">
+<code class="descname">dr1</code><a class="headerlink" href="#av.codec.codec.Codec.dr1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.draw_horiz_band">
+<code class="descname">draw_horiz_band</code><a class="headerlink" href="#av.codec.codec.Codec.draw_horiz_band" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.experimental">
+<code class="descname">experimental</code><a class="headerlink" href="#av.codec.codec.Codec.experimental" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.frame_rates">
+<code class="descname">frame_rates</code><a class="headerlink" href="#av.codec.codec.Codec.frame_rates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.frame_threads">
+<code class="descname">frame_threads</code><a class="headerlink" href="#av.codec.codec.Codec.frame_threads" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.hwaccel">
+<code class="descname">hwaccel</code><a class="headerlink" href="#av.codec.codec.Codec.hwaccel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.hwaccel_vdpau">
+<code class="descname">hwaccel_vdpau</code><a class="headerlink" href="#av.codec.codec.Codec.hwaccel_vdpau" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.id">
+<code class="descname">id</code><a class="headerlink" href="#av.codec.codec.Codec.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.intra_only">
+<code class="descname">intra_only</code><a class="headerlink" href="#av.codec.codec.Codec.intra_only" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.is_decoder">
+<code class="descname">is_decoder</code><a class="headerlink" href="#av.codec.codec.Codec.is_decoder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.is_encoder">
+<code class="descname">is_encoder</code><a class="headerlink" href="#av.codec.codec.Codec.is_encoder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.long_name">
+<code class="descname">long_name</code><a class="headerlink" href="#av.codec.codec.Codec.long_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.lossless">
+<code class="descname">lossless</code><a class="headerlink" href="#av.codec.codec.Codec.lossless" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.lossy">
+<code class="descname">lossy</code><a class="headerlink" href="#av.codec.codec.Codec.lossy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.name">
+<code class="descname">name</code><a class="headerlink" href="#av.codec.codec.Codec.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.neg_linesizes">
+<code class="descname">neg_linesizes</code><a class="headerlink" href="#av.codec.codec.Codec.neg_linesizes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.param_change">
+<code class="descname">param_change</code><a class="headerlink" href="#av.codec.codec.Codec.param_change" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.reorder">
+<code class="descname">reorder</code><a class="headerlink" href="#av.codec.codec.Codec.reorder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.slice_threads">
+<code class="descname">slice_threads</code><a class="headerlink" href="#av.codec.codec.Codec.slice_threads" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.small_last_frame">
+<code class="descname">small_last_frame</code><a class="headerlink" href="#av.codec.codec.Codec.small_last_frame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.subframes">
+<code class="descname">subframes</code><a class="headerlink" href="#av.codec.codec.Codec.subframes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.text_sub">
+<code class="descname">text_sub</code><a class="headerlink" href="#av.codec.codec.Codec.text_sub" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.truncated">
+<code class="descname">truncated</code><a class="headerlink" href="#av.codec.codec.Codec.truncated" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.type">
+<code class="descname">type</code><a class="headerlink" href="#av.codec.codec.Codec.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.variable_frame_size">
+<code class="descname">variable_frame_size</code><a class="headerlink" href="#av.codec.codec.Codec.variable_frame_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.codec.Codec.video_formats">
+<code class="descname">video_formats</code><a class="headerlink" href="#av.codec.codec.Codec.video_formats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-av.codec.context"></span><dl class="class">
+<dt id="av.codec.context.CodecContext">
+<em class="property">class </em><code class="descclassname">av.codec.context.</code><code class="descname">CodecContext</code><a class="headerlink" href="#av.codec.context.CodecContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.bit_rate">
+<code class="descname">bit_rate</code><a class="headerlink" href="#av.codec.context.CodecContext.bit_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.bit_rate_tolerance">
+<code class="descname">bit_rate_tolerance</code><a class="headerlink" href="#av.codec.context.CodecContext.bit_rate_tolerance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="av.codec.context.CodecContext.close">
+<code class="descname">close</code><span class="sig-paren">(</span><em>bool strict=True</em><span class="sig-paren">)</span><a class="headerlink" href="#av.codec.context.CodecContext.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.codec">
+<code class="descname">codec</code><a class="headerlink" href="#av.codec.context.CodecContext.codec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="av.codec.context.CodecContext.create">
+<em class="property">static </em><code class="descname">create</code><span class="sig-paren">(</span><em>codec</em>, <em>mode=None</em><span class="sig-paren">)</span><a class="headerlink" href="#av.codec.context.CodecContext.create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="av.codec.context.CodecContext.decode">
+<code class="descname">decode</code><span class="sig-paren">(</span><em>Packet packet=None</em>, <em>unsigned int count=0</em>, <em>bool prefer_send_recv=True</em><span class="sig-paren">)</span><a class="headerlink" href="#av.codec.context.CodecContext.decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode a list of <a class="reference internal" href="#av.frame.Frame" title="av.frame.Frame"><code class="xref py py-class docutils literal"><span class="pre">Frame</span></code></a> from the given <a class="reference internal" href="#av.packet.Packet" title="av.packet.Packet"><code class="xref py py-class docutils literal"><span class="pre">Packet</span></code></a>.</p>
+<p>If the packet is None, the buffers will be flushed. This is useful if
+you do not want the library to automatically re-order frames for you
+(if they are encoded with a codec that has B-frames).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="av.codec.context.CodecContext.encode">
+<code class="descname">encode</code><span class="sig-paren">(</span><em>Frame frame=None</em>, <em>unsigned int count=0</em>, <em>bool prefer_send_recv=True</em><span class="sig-paren">)</span><a class="headerlink" href="#av.codec.context.CodecContext.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encode a list of <a class="reference internal" href="#av.packet.Packet" title="av.packet.Packet"><code class="xref py py-class docutils literal"><span class="pre">Packet</span></code></a> from the given <a class="reference internal" href="#av.frame.Frame" title="av.frame.Frame"><code class="xref py py-class docutils literal"><span class="pre">Frame</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.is_decoder">
+<code class="descname">is_decoder</code><a class="headerlink" href="#av.codec.context.CodecContext.is_decoder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.is_encoder">
+<code class="descname">is_encoder</code><a class="headerlink" href="#av.codec.context.CodecContext.is_encoder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.is_open">
+<code class="descname">is_open</code><a class="headerlink" href="#av.codec.context.CodecContext.is_open" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.max_bit_rate">
+<code class="descname">max_bit_rate</code><a class="headerlink" href="#av.codec.context.CodecContext.max_bit_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.name">
+<code class="descname">name</code><a class="headerlink" href="#av.codec.context.CodecContext.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="av.codec.context.CodecContext.open">
+<code class="descname">open</code><span class="sig-paren">(</span><em>bool strict=True</em><span class="sig-paren">)</span><a class="headerlink" href="#av.codec.context.CodecContext.open" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.options">
+<code class="descname">options</code><a class="headerlink" href="#av.codec.context.CodecContext.options" title="Permalink to this definition">¶</a></dt>
+<dd><p>options: dict</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="av.codec.context.CodecContext.parse">
+<code class="descname">parse</code><span class="sig-paren">(</span><em>str input_</em>, <em>allow_stream=False</em><span class="sig-paren">)</span><a class="headerlink" href="#av.codec.context.CodecContext.parse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.profile">
+<code class="descname">profile</code><a class="headerlink" href="#av.codec.context.CodecContext.profile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.rate">
+<code class="descname">rate</code><a class="headerlink" href="#av.codec.context.CodecContext.rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.thread_count">
+<code class="descname">thread_count</code><a class="headerlink" href="#av.codec.context.CodecContext.thread_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.time_base">
+<code class="descname">time_base</code><a class="headerlink" href="#av.codec.context.CodecContext.time_base" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.context.CodecContext.type">
+<code class="descname">type</code><a class="headerlink" href="#av.codec.context.CodecContext.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="module-av.frame">
 <span id="frames"></span><h3>Frames<a class="headerlink" href="#module-av.frame" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
@@ -563,6 +866,80 @@ to None which will grab either.</li>
 <dl class="attribute">
 <dt id="av.video.stream.VideoStream.average_rate">
 <code class="descname">average_rate</code><a class="headerlink" href="#av.video.stream.VideoStream.average_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-av.video.codeccontext">
+<span id="video-codecs"></span><h3>Video Codecs<a class="headerlink" href="#module-av.video.codeccontext" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="av.video.codeccontext.VideoCodecContext">
+<em class="property">class </em><code class="descclassname">av.video.codeccontext.</code><code class="descname">VideoCodecContext</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#av.codec.context.CodecContext" title="av.codec.context.CodecContext"><code class="xref py py-class docutils literal"><span class="pre">av.codec.context.CodecContext</span></code></a></p>
+<dl class="attribute">
+<dt id="av.video.codeccontext.VideoCodecContext.coded_height">
+<code class="descname">coded_height</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext.coded_height" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.codeccontext.VideoCodecContext.coded_width">
+<code class="descname">coded_width</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext.coded_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.codeccontext.VideoCodecContext.display_aspect_ratio">
+<code class="descname">display_aspect_ratio</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext.display_aspect_ratio" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.codeccontext.VideoCodecContext.encoded_frame_count">
+<code class="descname">encoded_frame_count</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext.encoded_frame_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.codeccontext.VideoCodecContext.format">
+<code class="descname">format</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.codeccontext.VideoCodecContext.framerate">
+<code class="descname">framerate</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext.framerate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.codeccontext.VideoCodecContext.gop_size">
+<code class="descname">gop_size</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext.gop_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.codeccontext.VideoCodecContext.has_b_frames">
+<code class="descname">has_b_frames</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext.has_b_frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.codeccontext.VideoCodecContext.height">
+<code class="descname">height</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext.height" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.codeccontext.VideoCodecContext.pix_fmt">
+<code class="descname">pix_fmt</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext.pix_fmt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.codeccontext.VideoCodecContext.reformatter">
+<code class="descname">reformatter</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext.reformatter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.codeccontext.VideoCodecContext.sample_aspect_ratio">
+<code class="descname">sample_aspect_ratio</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext.sample_aspect_ratio" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.codeccontext.VideoCodecContext.width">
+<code class="descname">width</code><a class="headerlink" href="#av.video.codeccontext.VideoCodecContext.width" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -867,6 +1244,53 @@ the data in the <code class="docutils literal"><span class="pre">VideoFrame</spa
 <dt id="av.audio.stream.AudioStream">
 <em class="property">class </em><code class="descclassname">av.audio.stream.</code><code class="descname">AudioStream</code><a class="headerlink" href="#av.audio.stream.AudioStream" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#av.stream.Stream" title="av.stream.Stream"><code class="xref py py-class docutils literal"><span class="pre">av.stream.Stream</span></code></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="audio-codeccontext">
+<h3>Audio CodecContext<a class="headerlink" href="#audio-codeccontext" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-av.audio.codeccontext"></span><dl class="class">
+<dt id="av.audio.codeccontext.AudioCodecContext">
+<em class="property">class </em><code class="descclassname">av.audio.codeccontext.</code><code class="descname">AudioCodecContext</code><a class="headerlink" href="#av.audio.codeccontext.AudioCodecContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#av.codec.context.CodecContext" title="av.codec.context.CodecContext"><code class="xref py py-class docutils literal"><span class="pre">av.codec.context.CodecContext</span></code></a></p>
+<dl class="attribute">
+<dt id="av.audio.codeccontext.AudioCodecContext.channel_layout">
+<code class="descname">channel_layout</code><a class="headerlink" href="#av.audio.codeccontext.AudioCodecContext.channel_layout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.audio.codeccontext.AudioCodecContext.channels">
+<code class="descname">channels</code><a class="headerlink" href="#av.audio.codeccontext.AudioCodecContext.channels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.audio.codeccontext.AudioCodecContext.format">
+<code class="descname">format</code><a class="headerlink" href="#av.audio.codeccontext.AudioCodecContext.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.audio.codeccontext.AudioCodecContext.frame_size">
+<code class="descname">frame_size</code><a class="headerlink" href="#av.audio.codeccontext.AudioCodecContext.frame_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of samples per channel in an audio frame.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.audio.codeccontext.AudioCodecContext.layout">
+<code class="descname">layout</code><a class="headerlink" href="#av.audio.codeccontext.AudioCodecContext.layout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.audio.codeccontext.AudioCodecContext.rate">
+<code class="descname">rate</code><a class="headerlink" href="#av.audio.codeccontext.AudioCodecContext.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number samples of per second.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.audio.codeccontext.AudioCodecContext.sample_rate">
+<code class="descname">sample_rate</code><a class="headerlink" href="#av.audio.codeccontext.AudioCodecContext.sample_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number samples of per second.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1333,12 +1757,14 @@ than any builting Python logging level, so you must lower that as well:</p>
 <li><a class="reference internal" href="#module-av.container">Containers</a></li>
 <li><a class="reference internal" href="#module-av.stream">Streams</a></li>
 <li><a class="reference internal" href="#module-av.packet">Packets</a></li>
+<li><a class="reference internal" href="#module-av.codec.codec">Codecs</a></li>
 <li><a class="reference internal" href="#module-av.frame">Frames</a></li>
 <li><a class="reference internal" href="#module-av.plane">Planes</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#video">Video</a><ul>
 <li><a class="reference internal" href="#module-av.video.stream">Video Streams</a></li>
+<li><a class="reference internal" href="#module-av.video.codeccontext">Video Codecs</a></li>
 <li><a class="reference internal" href="#module-av.video.format">Video Formats</a></li>
 <li><a class="reference internal" href="#module-av.video.frame">Video Frames</a></li>
 <li><a class="reference internal" href="#module-av.video.plane">Video Planes</a></li>
@@ -1346,6 +1772,7 @@ than any builting Python logging level, so you must lower that as well:</p>
 </li>
 <li><a class="reference internal" href="#audio">Audio</a><ul>
 <li><a class="reference internal" href="#module-av.audio.stream">Audio Streams</a></li>
+<li><a class="reference internal" href="#audio-codeccontext">Audio CodecContext</a></li>
 <li><a class="reference internal" href="#module-av.audio.format">Audio Formats</a></li>
 <li><a class="reference internal" href="#module-av.audio.layout">Audio Layouts</a></li>
 <li><a class="reference internal" href="#module-av.audio.frame">Audio Frames</a></li>
