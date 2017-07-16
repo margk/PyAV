@@ -20,3 +20,7 @@ cdef object av_frac_to_fraction(lib.AVFrac *input)
 
 
 cdef str media_type_to_string(lib.AVMediaType)
+
+
+cdef str decode_string(bytes)
+cdef bytes encode_string(str)

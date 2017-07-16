@@ -39,7 +39,7 @@ cdef object _local = local()
 cdef int _err_count = 0
 
 cdef int stash_exception(exc_info=None):
-    
+
     global _err_count
 
     existing = getattr(_local, 'exc_info', None)
@@ -59,7 +59,7 @@ cdef int stash_exception(exc_info=None):
 cdef int _last_log_count = 0
 
 cdef int err_check(int res=0, str filename=None) except -1:
-    
+
     global _err_count
     global _last_log_count
 
@@ -109,14 +109,17 @@ cdef int err_check(int res=0, str filename=None) except -1:
 
 
 cdef dict avdict_to_dict(lib.AVDictionary *input):
-    
+
     cdef lib.AVDictionaryEntry *element = NULL
     cdef dict output = {}
     while True:
         element = lib.av_dict_get(input, "", element, lib.AV_DICT_IGNORE_SUFFIX)
         if element == NULL:
             break
-        output[element.key] = element.value
+        _key = decode_string(element.key)
+        _value = decode_string(element.value)
+        output[_key] = _value
+
     return output
 
 
@@ -124,7 +127,9 @@ cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True):
     if clear:
         lib.av_dict_free(dst)
     for key, value in src.iteritems():
-        err_check(lib.av_dict_set(dst, key, value, 0))
+        _key = encode_string(key)
+        _value = encode_string(value)
+        err_check(lib.av_dict_set(dst, _key, _value, 0))
 
 
 
@@ -158,7 +163,7 @@ cdef str media_type_to_string(lib.AVMediaType media_type):
 
     # There is a convenient lib.av_get_media_type_string(x), but it
     # doesn't exist in libav.
-            
+
     if media_type == lib.AVMEDIA_TYPE_VIDEO:
         return "video"
     elif media_type == lib.AVMEDIA_TYPE_AUDIO:
@@ -172,3 +177,24 @@ cdef str media_type_to_string(lib.AVMediaType media_type):
     else:
         return "unknown"
 
+
+cdef str decode_string(bytes input_string):
+    # decodes a bytes string into a unicode string
+
+    try:
+        output_string = input_string.decode()
+    except UnicodeDecodeError:
+        output_string = input_string.decode('utf_8')
+
+    return output_string
+
+
+cdef bytes encode_string(str input_string):
+    # encodes a unicode string into a bytes string
+
+    try:
+        output_string = input_string.encode()
+    except UnicodeDecodeError:
+        output_string = input_string.encode('utf_8')
+
+    return output_string

@@ -1,10 +1,10 @@
 import collections
 
-from av.utils cimport err_check
+from av.utils cimport err_check, encode_string, decode_string
 
 
 cdef class _Dictionary(object):
-    
+
     def __cinit__(self, *args, **kwargs):
         for arg in args:
             self.update(arg)
@@ -16,17 +16,22 @@ cdef class _Dictionary(object):
             lib.av_dict_free(&self.ptr)
 
     def __getitem__(self, str key):
-        cdef lib.AVDictionaryEntry *element = lib.av_dict_get(self.ptr, key, NULL, 0)
+        _key = encode_string(key)     # convert unicode -> byte
+        cdef lib.AVDictionaryEntry *element = lib.av_dict_get(self.ptr, _key, NULL, 0)
         if element != NULL:
-            return element.value
+            _value = decode_string(element.value)   # convert byte -> unicode
+            return _value
         else:
-            raise KeyError(key)
+            raise KeyError(_key)
 
     def __setitem__(self, str key, str value):
-        err_check(lib.av_dict_set(&self.ptr, key, value, 0))
+        _key = encode_string(key)     # convert unicode -> byte
+        _value = encode_string(value)     # convert unicode -> byte
+        err_check(lib.av_dict_set(&self.ptr, _key, _value, 0))
 
     def __delitem__(self, str key):
-        err_check(lib.av_dict_set(&self.ptr, key, NULL, 0))
+        _key = encode_string(key)     # convert unicode -> byte
+        err_check(lib.av_dict_set(&self.ptr, _key, NULL, 0))
 
     def __len__(self):
         return err_check(lib.av_dict_count(self.ptr))
@@ -37,7 +42,8 @@ cdef class _Dictionary(object):
             element = lib.av_dict_get(self.ptr, "", element, lib.AV_DICT_IGNORE_SUFFIX)
             if element == NULL:
                 break
-            yield element.key
+            _key = decode_string(element.key)   # convert byte -> unicode
+            yield _key
 
     def __repr__(self):
         return 'av.Dictionary(%r)' % dict(self)

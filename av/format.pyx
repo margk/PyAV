@@ -1,6 +1,7 @@
 cimport libav as lib
 
 from av.descriptor cimport wrap_avclass
+from av.utils cimport encode_string
 
 
 cdef object _cinit_bypass_sentinel = object()
@@ -24,7 +25,7 @@ cdef class ContainerFormat(object):
         to None which will grab either.
 
     """
-    
+
     def __cinit__(self, name, mode=None):
 
         if name is _cinit_bypass_sentinel:
@@ -33,7 +34,7 @@ cdef class ContainerFormat(object):
         # We need to hold onto the original name because AVInputFormat.name
         # is actually comma-seperated, and so we need to remember which one
         # this was.
-        self.name = name
+        self.name = encode_string(name)   # convert unicode -> byte
 
         # Searches comma-seperated names.
         if mode is None or mode == 'r':
@@ -42,11 +43,11 @@ cdef class ContainerFormat(object):
         if mode is None or mode == 'w':
             while True:
                 self.optr = lib.av_oformat_next(self.optr)
-                if not self.optr or self.optr.name == name:
+                if not self.optr or self.optr.name == self.name:
                     break
 
         if not self.iptr and not self.optr:
-            raise ValueError('no container format %r' % name)
+            raise ValueError('no container format %r' % self.name)
 
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.name)
@@ -121,4 +122,3 @@ while True:
     if not optr:
         break
     names.add(optr.name)
-
