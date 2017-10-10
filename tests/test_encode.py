@@ -35,14 +35,10 @@ def write_rgb_rotate(output):
         ))
         frame.planes[0].update_from_string(image.tobytes())
 
-        print 'HERE2a'
         for packet in stream.encode(frame):
-            print 'HERE2', packet
             output.mux(packet)
 
-    print 'HERE3a'
     for packet in stream.encode(None):
-        print 'HERE3', packet
         output.mux(packet)
 
     # Done!
@@ -61,7 +57,7 @@ def assert_rgb_rotate(self, input_):
     self.assertEqual(stream.type, 'video')
     self.assertEqual(stream.name, 'mpeg4')
     self.assertEqual(stream.average_rate, 24) # Only because we constructed is precisely.
-    self.assertEqual(stream.rate, Fraction(1, 24))
+    self.assertEqual(stream.rate, Fraction(24, 1))
     self.assertEqual(stream.time_base * stream.duration, 2)
     self.assertEqual(stream.format.name, 'yuv420p')
     self.assertEqual(stream.format.width, WIDTH)
@@ -103,6 +99,7 @@ class TestBasicAudioEncoding(TestCase):
 
         src = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
         for frame in src.decode(audio=0):
+            frame.pts = None
             for packet in stream.encode(frame):
                 output.mux(packet)
 
@@ -122,3 +119,38 @@ class TestBasicAudioEncoding(TestCase):
         self.assertEqual(stream.codec_context.format.name, 's16p')
         self.assertEqual(stream.codec_context.channels, channels)
 
+
+class TestEncodeStreamSemantics(TestCase):
+
+    def test_stream_index(self):
+
+        output = av.open(self.sandboxed('output.mov'), 'w')
+
+        vstream = output.add_stream('mpeg4', 24)
+        vstream.pix_fmt = 'yuv420p'
+        vstream.width = 320
+        vstream.height = 240
+
+        astream = output.add_stream('mp2', 48000)
+        astream.channels = 2
+        astream.format = 's16'
+
+        self.assertEqual(vstream.index, 0)
+        self.assertEqual(astream.index, 1)
+
+        vframe = VideoFrame(320, 240, 'yuv420p')
+        vpacket = vstream.encode(vframe)[0]
+
+        self.assertIs(vpacket.stream, vstream)
+        self.assertEqual(vpacket.stream_index, 0)
+
+        for i in xrange(10):
+            aframe = AudioFrame('s16', 'stereo', samples=astream.frame_size)
+            aframe.rate = 48000
+            apackets = astream.encode(aframe)
+            if apackets:
+                apacket = apackets[0]
+                break
+
+        self.assertIs(apacket.stream, astream)
+        self.assertEqual(apacket.stream_index, 1)

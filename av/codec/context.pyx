@@ -1,16 +1,16 @@
-from libc.stdint cimport uint8_t, int64_t
-from libc.string cimport memcpy
-from libc.stdlib cimport malloc, realloc, free
 from cpython cimport PyWeakref_NewRef
+from libc.errno cimport EAGAIN
+from libc.stdint cimport uint8_t, int64_t
+from libc.stdlib cimport malloc, realloc, free
+from libc.string cimport memcpy
 
 cimport libav as lib
 
 from av.codec.codec cimport Codec, wrap_codec
-from av.packet cimport Packet
-from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
-
+from av.packet cimport Packet
+from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
 
 
 cdef object _cinit_sentinel = object()
@@ -18,7 +18,7 @@ cdef object _cinit_sentinel = object()
 
 cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, lib.AVCodec *c_codec, ContainerProxy container):
     """Build an av.CodecContext for an existing AVCodecContext."""
-    
+
     cdef CodecContext py_ctx
 
     # TODO: This.
@@ -41,7 +41,7 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, lib.AVCodec *c_c
 
 
 cdef class CodecContext(object):
-    
+
     @staticmethod
     def create(codec, mode=None):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
@@ -62,6 +62,8 @@ cdef class CodecContext(object):
 
         # Signal that we want to reference count.
         self.ptr.refcounted_frames = 1
+
+        self.stream_index = -1
 
     property is_open:
         def __get__(self):
@@ -94,9 +96,17 @@ cdef class CodecContext(object):
         # for k, v in self.options.iteritems():
         #     options[k] = v
 
+        # Assert we have a time_base.
+        if not self.ptr.time_base.num:
+            self._set_default_time_base()
+
         err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, &options.ptr))
 
         self.options = dict(options)
+
+    cdef _set_default_time_base(self):
+        self.ptr.time_base.num = 1
+        self.ptr.time_base.den = lib.AV_TIME_BASE
 
     cpdef close(self, bint strict=True):
         if not lib.avcodec_is_open(self.ptr):
@@ -225,7 +235,7 @@ cdef class CodecContext(object):
         cdef Frame frame = self._next_frame
 
         cdef int res = lib.avcodec_receive_frame(self.ptr, frame.ptr)
-        if res == -35 or res == lib.AVERROR_EOF: # EAGAIN
+        if res == -EAGAIN or res == lib.AVERROR_EOF:
             return
         err_check(res)
 
@@ -237,9 +247,9 @@ cdef class CodecContext(object):
     cdef _recv_packet(self):
 
         cdef Packet packet = Packet()
-            
+
         cdef int res = lib.avcodec_receive_packet(self.ptr, &packet.struct)
-        if res == -35 or res == lib.AVERROR_EOF: # EAGAIN
+        if res == -EAGAIN or res == lib.AVERROR_EOF:
             return
         err_check(res)
 
@@ -254,6 +264,12 @@ cdef class CodecContext(object):
 
         cdef bint is_flushing = frame is None
         frames = self._prepare_frames_for_encode(frame)
+
+        # Assert the frames are in our time base.
+        # TODO: Don't mutate time.
+        for frame in frames:
+            if frame is not None:
+                frame._rebase_time(self.ptr.time_base)
 
         res = []
 
@@ -289,6 +305,8 @@ cdef class CodecContext(object):
         return res
 
     cdef _setup_encoded_packet(self, Packet packet):
+        # The packet's timing was simply copied across from the source frame.
+        # The muxer will take care of rebasing time if it needs to.
         packet._time_base = self.ptr.time_base
 
     cdef _encode(self, Frame frame):
@@ -343,7 +361,7 @@ cdef class CodecContext(object):
             decoded = self._decode(&packet.struct, &data_consumed)
             packet.struct.data += data_consumed
             packet.struct.size -= data_consumed
-            
+
             if decoded:
 
                 if isinstance(decoded, Frame):
@@ -378,20 +396,21 @@ cdef class CodecContext(object):
         if frame.ptr.pts == lib.AV_NOPTS_VALUE:
             frame.ptr.pts = frame.ptr.pkt_pts
 
-        # We don't have to worry about context vs. stream time_base during decoding
-        # as they should be the same.
-        frame._time_base = self.ptr.time_base
-        
+        if self.stream_index >= 0 and self.container and self.stream_index < self.container.ptr.nb_streams:
+            # If we are decoding in the context of a stream, assume the time
+            # base came from there.
+            # TODO: Actually track that packets have a consistent time_base,
+            # and pull it from there.
+            frame._time_base = self.container.ptr.streams[self.stream_index].time_base
+        else:
+            # This is a bad assumption to make, as it seems like AVCodecContext
+            # barely cares about timing information.
+            frame._time_base = self.ptr.time_base
+
         frame.index = self.ptr.frame_number - 1
- 
+
     cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
         raise NotImplementedError('Base CodecContext cannot decode packets.')
-
-    property time_base:
-        def __get__(self):
-            return avrational_to_faction(&self.ptr.time_base)
-        def __set__(self, value):
-            to_avrational(value, &self.ptr.time_base)
 
     property name:
         def __get__(self):
@@ -400,36 +419,38 @@ cdef class CodecContext(object):
     property type:
         def __get__(self):
             return self.codec.type
-        
+
     property profile:
         def __get__(self):
             if self.ptr.codec and lib.av_get_profile_name(self.ptr.codec, self.ptr.profile):
                 return lib.av_get_profile_name(self.ptr.codec, self.ptr.profile)
-            else:
-                return None
 
-    # TODO: Deprecate.
-    property rate:
+    property time_base:
         def __get__(self):
-            if self.ptr:
-                return self.ptr.ticks_per_frame * avrational_to_faction(&self.ptr.time_base)
+            return avrational_to_faction(&self.ptr.time_base)
+        def __set__(self, value):
+            to_avrational(value, &self.ptr.time_base)
+
+    property ticks_per_frame:
+        def __get__(self):
+            return self.ptr.ticks_per_frame
 
     property bit_rate:
         def __get__(self):
-            return self.ptr.bit_rate if self.ptr and self.ptr.bit_rate > 0 else None
+            return self.ptr.bit_rate if self.ptr.bit_rate > 0 else None
         def __set__(self, int value):
             self.ptr.bit_rate = value
 
     property max_bit_rate:
         def __get__(self):
-            if self.ptr and self.ptr.rc_max_rate > 0:
+            if self.ptr.rc_max_rate > 0:
                 return self.ptr.rc_max_rate
             else:
                 return None
-            
+
     property bit_rate_tolerance:
         def __get__(self):
-            return self.ptr.bit_rate_tolerance if self.ptr else None
+            self.ptr.bit_rate_tolerance
         def __set__(self, int value):
             self.ptr.bit_rate_tolerance = value
 
@@ -440,6 +461,3 @@ cdef class CodecContext(object):
             return self.ptr.thread_count
         def __set__(self, int value):
             self.ptr.thread_count = value
-
-
-

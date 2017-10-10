@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 from fractions import Fraction
 
@@ -22,13 +23,13 @@ def iter_raw_frames(path, packet_sizes, ctx):
             read_size = f.readinto(packet)
             assert size
             assert read_size == size
-            print i + 1, size, read_size
+            print(i + 1, size, read_size)
             if not read_size:
                 break
             for frame in ctx.decode(packet):
-                print '   ', frame
+                print('   ', frame)
                 yield frame
-        print 'flushing...'
+        print('flushing...')
         while True:
             try:
                 frames = ctx.decode(None)
@@ -37,7 +38,7 @@ def iter_raw_frames(path, packet_sizes, ctx):
                     raise
                 break
             for frame in frames:
-                print '   ', frame
+                print('   ', frame)
                 yield frame
             if not frames:
                 break
@@ -64,7 +65,7 @@ class TestCodecContext(TestCase):
         container = av.open(fate_suite('h264/interlaced_crop.mp4'))
         video_stream = container.streams.video[0]
 
-        width  = 640
+        width = 640
         height = 480
 
         ctx = codec.create()
@@ -80,10 +81,10 @@ class TestCodecContext(TestCase):
         frame_count = 1
         path_list = []
         for frame in iter_frames(container, video_stream):
-            
+
             new_frame = frame.reformat(width, height, pix_fmt)
             new_packets = ctx.encode(new_frame)
-            
+
             self.assertEqual(len(new_packets), 1)
             new_packet = new_packets[0]
 
@@ -112,7 +113,7 @@ class TestCodecContext(TestCase):
                 self.assertEqual(frame.format.name, pix_fmt)
 
     def test_encoding_h264(self):
-        self.video_encoding('libx264', {'crf':'19'})
+        self.video_encoding('libx264', {'crf': '19'})
 
     def test_encoding_mpeg4(self):
         self.video_encoding('mpeg4')
@@ -121,15 +122,15 @@ class TestCodecContext(TestCase):
         self.video_encoding('mpeg1video')
 
     def test_encoding_dvvideo(self):
-        options = {'pix_fmt':'yuv411p',
-                   'width':720,
-                   'height':480}
+        options = {'pix_fmt': 'yuv411p',
+                   'width': 720,
+                   'height': 480}
         self.video_encoding('dvvideo', options)
 
     def test_encoding_dnxhd(self):
-        options = {'b':'90M', #bitrate
-                   'pix_fmt':'yuv422p',
-                   'width':  1920,
+        options = {'b': '90M', #bitrate
+                   'pix_fmt': 'yuv422p',
+                   'width': 1920,
                    'height': 1080,
                    'time_base': '1001/30000',
                    'max_frames': 5}
@@ -145,11 +146,11 @@ class TestCodecContext(TestCase):
         container = av.open(fate_suite('h264/interlaced_crop.mp4'))
         video_stream = container.streams.video[0]
 
-        pix_fmt    = options.pop('pix_fmt', 'yuv420p')
-        width      = options.pop('width', 640)
-        height     = options.pop('height', 480)
+        pix_fmt = options.pop('pix_fmt', 'yuv420p')
+        width = options.pop('width', 640)
+        height = options.pop('height', 480)
         max_frames = options.pop('max_frames', 50)
-        time_base  = options.pop('time_base', video_stream.codec_context.time_base)
+        time_base = options.pop('time_base', video_stream.codec_context.time_base)
 
         ctx = codec.create()
         ctx.width = width
@@ -255,7 +256,7 @@ class TestCodecContext(TestCase):
         container = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
         audio_stream = container.streams.audio[0]
 
-        path = self.sandboxed('encoder.%s' % codec)
+        path = self.sandboxed('encoder.%s' % codec_name)
 
         samples = 0
         packet_sizes = []
@@ -264,6 +265,9 @@ class TestCodecContext(TestCase):
 
         with open(path, 'w') as f:
             for frame in iter_frames(container, audio_stream):
+
+                # We need to let the encoder retime.
+                frame.pts = None
 
                 if test_bad:
 
@@ -316,4 +320,3 @@ class TestCodecContext(TestCase):
             result_samples += frame.samples
             self.assertEqual(frame.rate, sample_rate)
             self.assertEqual(len(frame.layout.channels), channels)
-

@@ -33,7 +33,7 @@ cdef class OutputContainer(Container):
         :returns: The new :class:`~av.stream.Stream`.
 
         """
-        
+
         if (codec_name is None and template is None) or (codec_name is not None and template is not None):
             raise ValueError('needs one of codec_name or template')
 
@@ -54,7 +54,7 @@ cdef class OutputContainer(Container):
             if not template._codec_context:
                 raise ValueError("template has no codec context")
             codec = template._codec
-        
+
         # Assert that this format supports the requested codec.
         if not lib.avformat_query_codec(
             self.proxy.ptr.oformat,
@@ -97,9 +97,6 @@ cdef class OutputContainer(Container):
             codec_context.framerate.num = rate.numerator
             codec_context.framerate.den = rate.denominator
 
-            codec_context.time_base.num = rate.denominator # Inverted!
-            codec_context.time_base.den = rate.numerator
-
             stream.time_base = codec_context.time_base
 
         # Some sane audio defaults
@@ -111,28 +108,24 @@ cdef class OutputContainer(Container):
             codec_context.channels = 2
             codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO
 
-            stream.time_base.num = 1
-            stream.time_base.den = codec_context.sample_rate # Inverted!
-
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
             codec_context.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
-        
+
         return py_stream
-    
+
     cpdef start_encoding(self):
         """Write the file header! Called automatically."""
-        
+
         if self._started:
             return
 
         used_options = set()
 
-        # Make sure all of the streams are open.
+        # Finalize and open all streams.
         cdef Stream stream
-        cdef _Dictionary options
         for stream in self.streams:
-            
+
             ctx = stream.codec_context
             if not ctx.is_open:
 
@@ -144,21 +137,19 @@ cdef class OutputContainer(Container):
                     if k not in ctx.options:
                         used_options.add(k)
 
-            dict_to_avdict(&stream._stream.metadata, stream.metadata, clear=True)
+            stream._finalize_for_output()
 
         # Open the output file, if needed.
-        # TODO: is the avformat_write_header in the right place here?
         cdef char *name = "" if self.proxy.file is not None else self.name
-
         if self.proxy.ptr.pb == NULL and not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
             err_check(lib.avio_open(&self.proxy.ptr.pb, name, lib.AVIO_FLAG_WRITE))
 
         # Copy the metadata dict.
         dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True)
 
-        options = self.options.copy()
+        cdef _Dictionary options = self.options.copy()
         self.proxy.err_check(lib.avformat_write_header(
-            self.proxy.ptr, 
+            self.proxy.ptr,
             &options.ptr
         ))
 
@@ -167,12 +158,13 @@ cdef class OutputContainer(Container):
             if k not in options:
                 used_options.add(k)
         # ... and warn if any weren't used.
-        unused_options = {k: v for k, v in self.options.iteritems() if k not in used_options}
+        # TODO: How to items vs iteritems for Py2 vs 3 in Cython?
+        unused_options = {k: v for k, v in self.options.items() if k not in used_options}
         if unused_options:
             log.warning('Some options were not used: %s' % unused_options)
 
         self._started = True
-            
+
     def close(self, strict=False):
 
         # Normally, we just ignore that we've already done this.
@@ -189,15 +181,29 @@ cdef class OutputContainer(Container):
         cdef Stream stream
         for stream in self.streams:
             stream.codec_context.close()
-            
+
         if self.file is None and not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
             lib.avio_closep(&self.proxy.ptr.pb)
 
         self._done = True
-        
-    def mux(self, Packet packet not None):
+
+    def mux(self, packets):
+        # We accept either a Packet, or a sequence of packets. This should
+        # smooth out the transition to the new encode API which returns a
+        # sequence of packets.
+        if isinstance(packets, Packet):
+            self.mux_one(packets)
+        else:
+            for packet in packets:
+                self.mux_one(packet)
+
+    def mux_one(self, Packet packet not None):
         self.start_encoding()
+
+        # Assert the packet is in stream time.
+        if packet.struct.stream_index < 0 or packet.struct.stream_index >= self.proxy.ptr.nb_streams:
+            raise ValueError('Bad Packet stream_index.')
+        cdef lib.AVStream *stream = self.proxy.ptr.streams[packet.struct.stream_index]
+        packet._rebase_time(stream.time_base)
+
         self.proxy.err_check(lib.av_interleaved_write_frame(self.proxy.ptr, &packet.struct))
-
-
-    

@@ -30,8 +30,12 @@ class AVError(EnvironmentError):
         else:
             super(AVError, self).__init__(code, message)
         self.error_log = error_log
-        if error_log:
-            self.strerror = '%s (%s: %s)' % (self.strerror, error_log[0], error_log[1])
+    def __str__(self):
+        strerror = super(AVError, self).__str__()
+        if self.error_log:
+            return '%s (%s: %s)' % (strerror, self.error_log[0], self.error_log[1])
+        else:
+            return strerror
 AVError.__module__ = 'av'
 
 
@@ -137,10 +141,16 @@ cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True):
 # =================
 
 cdef object avrational_to_faction(lib.AVRational *input):
-    return Fraction(input.num, input.den) if input.den else Fraction(0, 1)
+    if input.num and input.den:
+        return Fraction(input.num, input.den)
 
 
 cdef object to_avrational(object value, lib.AVRational *input):
+
+    if value is None:
+        input.num = 0
+        input.den = 1
+        return
 
     if isinstance(value, Fraction):
         frac = value
@@ -194,7 +204,7 @@ cdef bytes encode_string(str input_string):
 
     try:
         output_string = input_string.encode()
-    except UnicodeDecodeError:
+    except UnicodeEncodeError:
         output_string = input_string.encode('utf_8')
 
     return output_string

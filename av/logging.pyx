@@ -9,6 +9,7 @@ cimport libav as lib
 
 import logging
 import sys
+import traceback
 
 
 # Levels.
@@ -125,7 +126,7 @@ cdef int _queue_size
 cdef bint _print_queue_size = False
 
 # For repeat check.
-cdef _Record _last_record 
+cdef _Record _last_record
 cdef int _skip_count = 0
 
 
@@ -138,12 +139,22 @@ cdef _get_last_error():
     if _error_count:
         # Manual locking FTW!
         if pythread.PyThread_acquire_lock(_skip_lock, 1): # 1 -> wait
-            res = _error_count, (
-                'libav.' + _last_error_record.name if _last_error_record.name else '',
-                _last_error_record.level,
-                _last_error_record.message if _last_error_record.message[0] else '',
-            )
-            pythread.PyThread_release_lock(_skip_lock)
+
+            # print('log-record name:', _last_error_record.name)
+
+            try:
+                res = _error_count, (
+                                    'libav.' + _last_error_record.name if _last_error_record.name else '',
+                                    _last_error_record.level,
+                                    _last_error_record.message if _last_error_record.message[0] else '',
+                                    )
+            except:
+                print('Exception during logging, again...')
+                traceback.print_exc()
+                res = 0, None
+            finally:
+                pythread.PyThread_release_lock(_skip_lock)
+
         return res
     else:
         return 0, None
@@ -194,7 +205,7 @@ cdef bint _pop_record(_Record *dst):
 
     if record == NULL:
         return False
-    
+
     # This free is what makes this whole copying thing worth it, since it
     # heavily simplifies a few of the lower functions, since their records can
     # be on the stack, and the queue functions fully deal with free-ing memory.
@@ -238,7 +249,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
     # Skip messages which are identical to the previous.
     cdef bint is_repeated = False
     if pythread.PyThread_acquire_lock(_skip_lock, 1): # 1 -> wait
-        
+
         if is_interesting:
 
             is_repeated = (
@@ -267,7 +278,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
             memcpy(&_last_error_record, &record, sizeof(_Record))
 
         pythread.PyThread_release_lock(_skip_lock)
-        
+
         if not is_interesting:
             return
         if is_repeated:

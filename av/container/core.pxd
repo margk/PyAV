@@ -13,10 +13,10 @@ cdef class ContainerProxy(object):
     cdef bint writeable
     cdef lib.AVFormatContext *ptr
 
-    cdef seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame)
+    cdef seek(self, int stream_index, offset, str whence, bint backward, bint any_frame)
     cdef flush_buffers(self)
 
-    cdef str name
+    cdef bytes name
 
     # File-like source.
     cdef object file
@@ -31,13 +31,13 @@ cdef class ContainerProxy(object):
     cdef unsigned char *buffer
     cdef long pos
     cdef bint pos_is_valid
-    
+
     cdef int err_check(self, int value) except -1
 
 
 cdef class Container(object):
-    
-    cdef readonly str name
+
+    cdef readonly bytes name
     cdef readonly object file
 
     cdef readonly bint writeable
@@ -50,4 +50,3 @@ cdef class Container(object):
 
     cdef readonly StreamContainer streams
     cdef readonly dict metadata
-

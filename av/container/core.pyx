@@ -1,6 +1,5 @@
-from libc.stdint cimport uint8_t, int64_t
+from libc.stdint cimport int64_t
 from libc.stdlib cimport malloc, free
-from libc.string cimport memcpy
 
 import sys
 
@@ -8,82 +7,14 @@ cimport libav as lib
 
 from av.container.input cimport InputContainer
 from av.container.output cimport OutputContainer
+from av.container.pyio cimport pyio_read, pyio_write, pyio_seek
 from av.format cimport build_container_format
-from av.utils cimport err_check, stash_exception, dict_to_avdict
+from av.utils cimport err_check, dict_to_avdict
 
 from av.dictionary import Dictionary # not cimport
 from av.utils import AVError # not cimport
 
-
-cdef int pyio_read(void *opaque, uint8_t *buf, int buf_size) nogil:
-    with gil:
-        return pyio_read_gil(opaque, buf, buf_size)
-
-cdef int pyio_read_gil(void *opaque, uint8_t *buf, int buf_size):
-    cdef ContainerProxy self
-    cdef bytes res
-    try:
-        self = <ContainerProxy>opaque
-        res = self.fread(buf_size)
-        memcpy(buf, <void*><char*>res, len(res))
-        self.pos += len(res)
-        if not res:
-            return lib.AVERROR_EOF
-        return len(res)
-    except Exception as e:
-        return stash_exception()
-
-
-cdef int pyio_write(void *opaque, uint8_t *buf, int buf_size) nogil:
-    with gil:
-        return pyio_write_gil(opaque, buf, buf_size)
-
-cdef int pyio_write_gil(void *opaque, uint8_t *buf, int buf_size):
-    cdef ContainerProxy self
-    cdef bytes bytes_to_write
-    cdef int bytes_written
-    try:
-        self = <ContainerProxy>opaque
-        bytes_to_write = buf[:buf_size]
-        ret_value = self.fwrite(bytes_to_write)
-        bytes_written = ret_value if isinstance(ret_value, int) else buf_size
-        self.pos += bytes_written
-        return bytes_written
-    except Exception as e:
-        return stash_exception()
-
-
-cdef int64_t pyio_seek(void *opaque, int64_t offset, int whence) nogil:
-    # Seek takes the standard flags, but also a ad-hoc one which means that
-    # the library wants to know how large the file is. We are generally
-    # allowed to ignore this.
-    if whence == lib.AVSEEK_SIZE:
-        return -1
-    with gil:
-        return pyio_seek_gil(opaque, offset, whence)
-
-cdef int64_t pyio_seek_gil(void *opaque, int64_t offset, int whence):
-    cdef ContainerProxy self
-    try:
-        self = <ContainerProxy>opaque
-        res = self.fseek(offset, whence)
-
-        # Track the position for the user.
-        if whence == 0:
-            self.pos = offset
-        elif whence == 1:
-            self.pos += offset
-        else:
-            self.pos_is_valid = False
-        if res is None:
-            if self.pos_is_valid:
-                res = self.pos
-            else:
-                res = self.ftell()
-        return res
-
-    except Exception as e:
-        return stash_exception()
+from av.utils cimport encode_string, decode_string
 
 
 
@@ -191,17 +122,23 @@ cdef class ContainerProxy(object):
                 if self.iocontext:
                     lib.av_freep(&self.iocontext)
 
-    cdef seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
+    cdef seek(self, int stream_index, offset, str whence, bint backward, bint any_frame):
+
+        # We used to take floats here and assume they were in seconds. This
+        # was super confusing, so lets go in the complete opposite direction.
+        if not isinstance(offset, int):
+            raise TypeError('Container.seek only accepts integer offset.', type(offset))
+        cdef int64_t c_offset = offset
 
         cdef int flags = 0
         cdef int ret
 
-        if mode == 'frame':
+        if whence == 'frame':
             flags |= lib.AVSEEK_FLAG_FRAME
-        elif mode == 'byte':
+        elif whence == 'byte':
             flags |= lib.AVSEEK_FLAG_BYTE
-        elif mode != 'time':
-            raise ValueError('mode must be one of "frame", "byte", or "time"')
+        elif whence != 'time':
+            raise ValueError("whence must be one of 'frame', 'byte', or 'time'.", whence)
 
         if backward:
             flags |= lib.AVSEEK_FLAG_BACKWARD
@@ -210,7 +147,7 @@ cdef class ContainerProxy(object):
             flags |= lib.AVSEEK_FLAG_ANY
 
         with nogil:
-            ret = lib.av_seek_frame(self.ptr, stream_index, timestamp, flags)
+            ret = lib.av_seek_frame(self.ptr, stream_index, c_offset, flags)
         err_check(ret)
 
         self.flush_buffers()
@@ -227,7 +164,8 @@ cdef class ContainerProxy(object):
 
 
     cdef int err_check(self, int value) except -1:
-        return err_check(value, filename=self.name)
+        # return err_check(value, filename=decode_string(self.name))
+        return err_check(value, filename=str(self.name))
 
 
 
@@ -242,11 +180,18 @@ cdef class Container(object):
         if not self.writeable and not isinstance(self, InputContainer):
             raise RuntimeError('Container cannot be extended except')
 
-        if isinstance(file_, basestring):
-            self.name = file_
-        else:
-            self.name = str(getattr(file_, 'name', None))
+        # if isinstance(file_, basestring) or isinstance(file_, str):
+        #     self.name = encode_string(file_)    # convert unicode -> byte
+        # else:
+        #     # self.name = encode_string(str(getattr(file_, 'name', None)))    # convert unicode -> byte
+        #     self.name = str(getattr(file_, 'name', None))
+        #     self.file = file_
+
+        try:
+            self.name = str(file_.name)
             self.file = file_
+        except AttributeError:
+            self.name = encode_string(file_)    # convert unicode -> byte
 
         if format_name is not None:
             self.format = ContainerFormat(format_name)
@@ -277,7 +222,7 @@ def open(file, mode=None, format=None, options=None):
     e.g.::
 
         >>> # Open webcam on OS X.
-        >>> av.open(format='avfoundation', file='0') # doctest: SKIP
+        >>> av.open(format='avfoundation', file='0') # doctest: +SKIP
 
     """
 

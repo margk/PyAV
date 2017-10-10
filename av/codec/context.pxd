@@ -14,6 +14,11 @@ cdef class CodecContext(object):
 
     cdef ContainerProxy container
 
+    # Used as a signal that this is within a stream, and also for us to access
+    # that stream. This is set "manually" by the stream after constructing
+    # this object.
+    cdef int stream_index
+
     cdef lib.AVCodecParserContext *parser
     cdef unsigned char *parse_buffer
     cdef size_t parse_buffer_size
@@ -29,7 +34,9 @@ cdef class CodecContext(object):
     # Public API.
     cpdef open(self, bint strict=?)
     cpdef close(self, bint strict=?)
-    
+
+    cdef _set_default_time_base(self)
+
     # Wraps both versions of the transcode API, returning lists.
     cpdef encode(self, Frame frame=?, unsigned int count=?, bint prefer_send_recv=?)
     cpdef decode(self, Packet packet=?, unsigned int count=?, bint prefer_send_recv=?)
@@ -61,4 +68,3 @@ cdef class CodecContext(object):
 
 
 cdef CodecContext wrap_codec_context(lib.AVCodecContext*, lib.AVCodec*, ContainerProxy)
-

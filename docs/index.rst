@@ -50,9 +50,16 @@ Contents
     about
     installation
     examples
-    api
+    api/index
+
+
+.. toctree::
+    :maxdepth: 1
+
     hacking
     includes
+    changelog
+    license
 
 
 Indices and Tables
@@ -60,4 +67,3 @@ Indices and Tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

@@ -3,7 +3,7 @@ from libc.limits cimport INT_MAX
 from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
 
 from av.plane cimport Plane
-from av.utils cimport avrational_to_faction
+from av.utils cimport avrational_to_faction, to_avrational
 
 from fractions import Fraction
 
@@ -52,38 +52,42 @@ cdef class Frame(object):
     cdef int _max_plane_count(self):
         return INT_MAX
 
-    cdef _copy_attributes_from(self, Frame other):
-        self.index = other.index
-        self._time_base = other._time_base
-        if self.ptr and other.ptr:
-            self.ptr.pkt_pts = other.ptr.pkt_pts
-            self.ptr.pkt_dts = other.ptr.pkt_dts
-            self.ptr.pts = other.ptr.pts
-    
-    cdef _init_properties(self):
+    cdef _copy_internal_attributes(self, Frame source, bint data_layout=True):
+        """Mimic another frame."""
+        self.index = source.index
+        self._time_base = source._time_base
+        lib.av_frame_copy_props(self.ptr, source.ptr)
+        if data_layout:
+            # TODO: Assert we don't have any data yet.
+            self.ptr.format = source.ptr.format
+            self.ptr.width = source.ptr.width
+            self.ptr.height = source.ptr.height
+            self.ptr.channel_layout = source.ptr.channel_layout
+            self.ptr.channels = source.ptr.channels
+
+    cdef _init_user_attributes(self):
         pass # Dummy to match the API of the others.
 
+    cdef _rebase_time(self, lib.AVRational dst):
 
-    cdef int _retime(self, lib.AVRational src, lib.AVRational dst) except -1:
-
-        if not src.num:
-            src = self._time_base
         if not dst.num:
-            dst = self._time_base
+            raise ValueError('Cannot rebase to zero time.')
 
-        if not src.num:
-            raise ValueError('No src time_base.')
-        if not dst.num:
-            raise ValueError('No dst time_base.')
+        if not self._time_base.num:
+            self._time_base = dst
+            return
+
+        if self._time_base.num == dst.num and self._time_base.den == dst.den:
+            return
 
         if self.ptr.pts != lib.AV_NOPTS_VALUE:
             self.ptr.pts = lib.av_rescale_q(
                 self.ptr.pts,
-                src, dst
+                self._time_base, dst
             )
 
         self._time_base = dst
-        return 0 # Just for exception.
+
 
     property dts:
         def __get__(self):
@@ -111,9 +115,7 @@ cdef class Frame(object):
 
     property time_base:
         def __get__(self):
-            return avrational_to_faction(&self._time_base)
+            if self._time_base.num:
+                return avrational_to_faction(&self._time_base)
         def __set__(self, value):
-            value = Fraction(value)
-            self._time_base.num = value.numerator
-            self._time_base.den = value.denominator
-
+            to_avrational(value, &self._time_base)
